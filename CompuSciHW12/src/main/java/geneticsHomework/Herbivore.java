@@ -10,7 +10,7 @@ abstract public class Herbivore extends Animal {
 	
 	@Override
 	protected double doEating() {
-		return getCell().eatFood(this.dailyEnergyMax());
+		return getCell().eatFood(this.turnEnergyMax());
 	}
 	
 

@@ -17,356 +17,370 @@ import java.util.Iterator;
 
 /**
  * @author Peter Dong
- * 
- * This is a container that holds the Cells in the simulation and governs their general behavior.
- * It calls the Cells each turn and tells them to do their work.
+ *
+ * This is a container that holds the Cells in the simulation and governs their
+ * general behavior. It calls the Cells each turn and tells them to do their
+ * work.
  *
  */
 public class Arena implements Drawable {
 
-	private int xsize;
-	private int ysize;
+    private int xsize;
+    private int ysize;
 
-	private Map<Coord, Cell> map = new TreeMap<Coord, Cell>();
+    private Map<Coord, Cell> map = new TreeMap<Coord, Cell>();
 
-	private FileWriter file;
+    private FileWriter file;
 
+    private Viewer viewer;
 //	static private int randomSeed = 0;
-	static private Random ran = new Random();
-	/**
-	 * @return the random number generator that all classes should use
-	 */
-	static public Random getRandom() {
-		return ran;
-	}
-	static public void setSeed(long seed) {
-		ran = new Random(seed);
-	}
+    static private Random ran = new Random();
 
-	private boolean printout = false;
+    /**
+     * @return the random number generator that all classes should use
+     */
+    static public Random getRandom() {
+        return ran;
+    }
 
-	// This is used for the countAnimals function
-	private Map<String, Integer> aniMap = new HashMap<String, Integer>();
+    static public void setSeed(long seed) {
+        ran = new Random(seed);
+    }
 
-	private Map<String, Color> colorMap = new HashMap<String, Color>();
+    private boolean printout = false;
 
-	private Map<String, Integer> finalMap = new TreeMap<>();
+    // This is used for the countAnimals function
+    private Map<String, Integer> aniMap = new HashMap<String, Integer>();
 
-	private List<String> herbivoreNames = new ArrayList<>();
+    private Map<String, Color> colorMap = new HashMap<String, Color>();
 
-	public boolean isHerbivore(String name) {
-		return herbivoreNames.contains(name);
-	}
+    private Map<String, Integer> finalMap = new TreeMap<>();
 
-	/**
-	 * @author Peter Dong
-	 * 
-	 * This is a small private class that is used to easily store coordinates for a 2 x 2 grid.
-	 * The cool thing is, it doesn't even need accessors for this usage.
-	 */
-	private class Coord implements Comparable<Coord> {
+    private List<String> herbivoreNames = new ArrayList<>();
 
-		private int x;
-		private int y;
+    public boolean isHerbivore(String name) {
+        return herbivoreNames.contains(name);
+    }
 
-		public Coord(int x, int y) {
-			this.x = x;
-			this.y = y;
-		}
+    public void setViewer(Viewer viewer) {
+        this.viewer = viewer;
+    }
 
-		@Override
-		public boolean equals(Object arg0) {
-			if (arg0 == this)
-				return true;
+    public Viewer getViewer() {
+        return viewer;
+    }
 
-			if (arg0 == null || !(arg0 instanceof Coord)) {
-				return false;
-			}
-			Coord icoor = (Coord)arg0;
-			return (x == icoor.x && y == icoor.y);
-		}
+    /**
+     * @author Peter Dong
+     *
+     * This is a small private class that is used to easily store coordinates
+     * for a 2 x 2 grid. The cool thing is, it doesn't even need accessors for
+     * this usage.
+     */
+    private class Coord implements Comparable<Coord> {
 
-		@Override
-		public int compareTo(Coord icoord) {
-			if (x == icoord.x) {
-				if (y == icoord.y) {
-					return 0;
-				}
-				else if (y < icoord.y) {
-					return -1;
-				}
-				else {
-					return 1;
-				}
-			}
-			else if (x < icoord.x) {
-				return -1;
-			}
-			else {
-				return 1;
-			}
-		}
-	}
+        private int x;
+        private int y;
 
-	/**
-	 * @param xsize - the size of the arena, in Cells
-	 * @param ysize - the size of the arena, in Cells
-	 */
-	public Arena(int xsize, int ysize, int cellSize) {
-		this.xsize = xsize;
-		this.ysize = ysize;
-		Cell.setSize(cellSize);
-		initialize();
-	}
+        public Coord(int x, int y) {
+            this.x = x;
+            this.y = y;
+        }
 
-	/**
-	 * Tells the Arena whether or not to print the status to the standard output
-	 * @param print - whether or not to print out the status
-	 */
-	public void setPrintout(boolean print) {
-		printout = print;
-	}
+        @Override
+        public boolean equals(Object arg0) {
+            if (arg0 == this) {
+                return true;
+            }
 
-	/**
-	 * This attaches a file to the Arena for output
-	 * @param file - a FileWriter object, ready to use
-	 */
-	public void setFile(FileWriter file) {
-		this.file = file;
-	}
+            if (arg0 == null || !(arg0 instanceof Coord)) {
+                return false;
+            }
+            Coord icoor = (Coord) arg0;
+            return (x == icoor.x && y == icoor.y);
+        }
 
-	@Override
-	public void Draw(Graphics graph, int x, int y) {
-		for (Coord icoord : map.keySet()) {
-			map.get(icoord).Draw(graph, x + icoord.x * map.get(icoord).getXSize(),
-					y + icoord.y * map.get(icoord).getYSize());
-		}
-	}
+        @Override
+        public int compareTo(Coord icoord) {
+            if (x == icoord.x) {
+                if (y == icoord.y) {
+                    return 0;
+                } else if (y < icoord.y) {
+                    return -1;
+                } else {
+                    return 1;
+                }
+            } else if (x < icoord.x) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+    }
 
-	@Override
-	public int getXSize() { // This assumes that all cells are the same size!
-		return getCell(0, 0).getXSize() * (getXDim() + 1);
-	}
+    /**
+     * @param xsize - the size of the arena, in Cells
+     * @param ysize - the size of the arena, in Cells
+     */
+    public Arena(int xsize, int ysize, int cellSize) {
+        this.xsize = xsize;
+        this.ysize = ysize;
+        Cell.setSize(cellSize);
+        initialize();
+    }
 
-	@Override
-	public int getYSize() {
-		return getCell(0, 0).getYSize() * (getYDim() + 2);
-	}
+    /**
+     * Tells the Arena whether or not to print the status to the standard output
+     *
+     * @param print - whether or not to print out the status
+     */
+    public void setPrintout(boolean print) {
+        printout = print;
+    }
 
-	/**
-	 * @return the number of Cells in the Arena, in the x direction
-	 */
-	public int getXDim() {
-		return xsize;
-	}
+    /**
+     * This attaches a file to the Arena for output
+     *
+     * @param file - a FileWriter object, ready to use
+     */
+    public void setFile(FileWriter file) {
+        this.file = file;
+    }
 
-	/**
-	 * @return the number of Cells in the Arena, in the y direction
-	 */
-	public int getYDim() {
-		return ysize;
-	}
+    @Override
+    public void Draw(Graphics graph, int x, int y) {
+        for (Coord icoord : map.keySet()) {
+            map.get(icoord).Draw(graph, x + icoord.x * map.get(icoord).getXSize(),
+                    y + icoord.y * map.get(icoord).getYSize());
+        }
+    }
 
-	/**
-	 * This is called by the constructor to fill the map with default Cells
-	 */
-	protected void initialize() {
-		for (int ix = 0; ix < xsize; ++ix) {
-			for (int iy = 0; iy < ysize; ++iy) {
-				map.put(new Coord(ix, iy), new Cell(this, ix, iy));
-			}
-		}
-	}
+    @Override
+    public int getXSize() { // This assumes that all cells are the same size!
+        return getCell(0, 0).getXSize() * (getXDim() + 1);
+    }
 
-	/**
-	 * Use this function to change the Cells used with inherited ones.
-	 * 
-	 * @param x - the position of the Cell
-	 * @param y - the position of the Cell
-	 * @param newCell - the new Cell to replace the old one
-	 */
-	public void changeCell(int x, int y, Cell newCell) {
-		Coord coord = new Coord(x, y);
-		map.put(coord, newCell);
-	}
+    @Override
+    public int getYSize() {
+        return getCell(0, 0).getYSize() * (getYDim() + 2);
+    }
 
-	/**
-	 * Adds an Animal to a particular location
-	 * 
-	 * @param x - the location of the Animal
-	 * @param y - the location of the Animal
-	 * @param an - the Animal to be added
-	 */
-	public void addAnimal(int x, int y, Animal an) {
-		getCell(x, y).addAnimal(an);
+    /**
+     * @return the number of Cells in the Arena, in the x direction
+     */
+    public int getXDim() {
+        return xsize;
+    }
 
-		if (!colorMap.containsKey(an)) {
-			colorMap.put(an.getName(), an.getColor());
-			if (an instanceof Herbivore) {
-				herbivoreNames.add(an.getName());
-			}
-			updateMap();
-		}
-	}
+    /**
+     * @return the number of Cells in the Arena, in the y direction
+     */
+    public int getYDim() {
+        return ysize;
+    }
 
-	/**
-	 * Adds an Animal to a random location on the map.
-	 * 
-	 * @param an - the Animal to be added
-	 */
-	public void addRandomAnimal(Animal an) {
-		int x = ran.nextInt(getXDim());
-		int y = ran.nextInt(getYDim());
-		addAnimal(x, y, an);
-	}
+    /**
+     * This is called by the constructor to fill the map with default Cells
+     */
+    protected void initialize() {
+        for (int ix = 0; ix < xsize; ++ix) {
+            for (int iy = 0; iy < ysize; ++iy) {
+                map.put(new Coord(ix, iy), new Cell(this, ix, iy));
+            }
+        }
+    }
 
-	/**
-	 * @param x - the location of the Cell
-	 * @param y - the location of the Cell
-	 * @return - the Cell at that location
-	 */
-	public Cell getCell(int x, int y) {
-		return map.get(new Coord(x, y));
-	}
+    /**
+     * Use this function to change the Cells used with inherited ones.
+     *
+     * @param x - the position of the Cell
+     * @param y - the position of the Cell
+     * @param newCell - the new Cell to replace the old one
+     */
+    public void changeCell(int x, int y, Cell newCell) {
+        Coord coord = new Coord(x, y);
+        map.put(coord, newCell);
+    }
 
-	/**
-	 * The primary method of the Arena, called each turn by the Viewer.
-	 * It calls each Cell in turn.
-	 */
-	public boolean doTurn() {
-		for (Cell icell : map.values()) {
-			icell.beginningOfTurn();
-		}
+    /**
+     * Adds an Animal to a particular location
+     *
+     * @param x - the location of the Animal
+     * @param y - the location of the Animal
+     * @param an - the Animal to be added
+     */
+    public void addAnimal(int x, int y, Animal an) {
+        getCell(x, y).addAnimal(an);
 
-		for (Cell icell : map.values()) {
-			icell.doTurn();
-		}
+        if (!colorMap.containsKey(an)) {
+            colorMap.put(an.getName(), an.getColor());
+            if (an instanceof Herbivore) {
+                herbivoreNames.add(an.getName());
+            }
+            updateMap();
+        }
+    }
 
-		updateMap();
-		updateFinal();
+    /**
+     * Adds an Animal to a random location on the map.
+     *
+     * @param an - the Animal to be added
+     */
+    public void addRandomAnimal(Animal an) {
+        int x = ran.nextInt(getXDim());
+        int y = ran.nextInt(getYDim());
+        addAnimal(x, y, an);
+    }
 
-		if (printout) {
-			System.out.println(countAnimals());
-		}
+    /**
+     * @param x - the location of the Cell
+     * @param y - the location of the Cell
+     * @return - the Cell at that location
+     */
+    public Cell getCell(int x, int y) {
+        return map.get(new Coord(x, y));
+    }
 
-		if (checkStillGoing()) {
-			return true;
-		} else {
-			outputFinal();
-			return false;
-		}
-	}
+    /**
+     * The primary method of the Arena, called each turn by the Viewer. It calls
+     * each Cell in turn.
+     */
+    public boolean doTurn() {
+        for (Cell icell : map.values()) {
+            icell.beginningOfTurn();
+        }
 
-	static final int UPPER_LIMIT = 200000;
+        for (Cell icell : map.values()) {
+            icell.doTurn();
+        }
 
-	private boolean checkStillGoing() {
-		if (countTotalAnimals() <= 0) {
-			return false;
-		} else {
-			for (Integer i : aniMap.values()) {
-				if (i > UPPER_LIMIT) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
+        updateMap();
+        updateFinal();
 
-	private int countTotalAnimals() {
-		int total = 0;
+        if (printout) {
+            System.out.println(countAnimals());
+        }
 
-		for (Integer i : aniMap.values()) {
-			total += i;
-		}
+        if (checkStillGoing()) {
+            return true;
+        } else {
+            outputFinal();
+            return false;
+        }
+    }
 
-		return total;
-	}
+    static final int UPPER_LIMIT = 200000;
 
-	private void updateFinal() {
-		for (Entry<String, Integer> ent : aniMap.entrySet()) {
-			if (finalMap.containsKey(ent.getKey())) {
-				finalMap.put(ent.getKey(), finalMap.get(ent.getKey()) + ent.getValue());
-			} else {
-				finalMap.put(ent.getKey(), ent.getValue());
-			}
-		}
-	}
+    private boolean checkStillGoing() {
+        if (countTotalAnimals() <= 0) {
+            return false;
+        } else {
+            for (Integer i : aniMap.values()) {
+                if (i > UPPER_LIMIT) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 
-	private void outputFinal() {
-		if (file != null) {
-			for (Entry<String, Integer> ent : finalMap.entrySet())
-				try {
-					file.write(ent.getKey() + '\t' + ent.getValue() + '\t');
-				} catch (IOException e) {
-					// If there is no valid file attached, just stop
-					return;
-				}		
-			try {
-				file.write('\n');
-			} catch (IOException e) {
-				return;
-			}
-		}
-	}
+    private int countTotalAnimals() {
+        int total = 0;
 
-	public void close() {
-		if (file != null) {
-			try {
-				file.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+        for (Integer i : aniMap.values()) {
+            total += i;
+        }
 
-	/**
-	 * @return A String listing the number of each different type of Animal,
-	 * for easy display by the Viewer 
-	 */
-	public String countAnimals() {
-		String response = "";
+        return total;
+    }
 
-		List<String> myset = new LinkedList<String>(aniMap.keySet());
-		Collections.sort(myset);
-		Iterator<String> it = myset.iterator();
+    private void updateFinal() {
+        for (Entry<String, Integer> ent : aniMap.entrySet()) {
+            if (finalMap.containsKey(ent.getKey())) {
+                finalMap.put(ent.getKey(), finalMap.get(ent.getKey()) + ent.getValue());
+            } else {
+                finalMap.put(ent.getKey(), ent.getValue());
+            }
+        }
+    }
 
-		while (it.hasNext()) {
-			String thisOne = it.next();
-			response = response.concat(thisOne + " " + aniMap.get(thisOne) + "   "); 
-		}
+    private void outputFinal() {
+        if (file != null) {
+            for (Entry<String, Integer> ent : finalMap.entrySet()) {
+                try {
+                    file.write(ent.getKey() + '\t' + ent.getValue() + '\t');
+                } catch (IOException e) {
+                    // If there is no valid file attached, just stop
+                    return;
+                }
+            }
+            try {
+                file.write('\n');
+            } catch (IOException e) {
+                return;
+            }
+        }
+    }
 
-		return response;
-	}
+    public void close() {
+        if (file != null) {
+            try {
+                file.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-	/**
-	 * This function updates the map used by getAnimalCount() and countAnimals()
-	 */
-	private void updateMap() {
-		for (String str : aniMap.keySet()) {
-			aniMap.put(str, 0);
-		}
+    /**
+     * @return A String listing the number of each different type of Animal, for
+     * easy display by the Viewer
+     */
+    public String countAnimals() {
+        String response = "";
 
-		for (Cell icell : map.values()) {
-			icell.countAnimals(aniMap);
-		}
-	}
+        List<String> myset = new LinkedList<String>(aniMap.keySet());
+        Collections.sort(myset);
+        Iterator<String> it = myset.iterator();
 
+        while (it.hasNext()) {
+            String thisOne = it.next();
+            response = response.concat(thisOne + " " + aniMap.get(thisOne) + "   ");
+        }
 
-	/**
-	 * Gives access to count of each Animal, mainly for LeaderBoard
-	 * @return the map of how many of each type of Animal
-	 */
-	public Map<String, Integer> getAnimalCount() {
-		return aniMap;
-	}
+        return response;
+    }
 
-	/**
-	 * Returns the color associated with a given Animal.
-	 * @param animal - the Animal to find the color of
-	 * @return the Animal's color
-	 */
-	public Color getAnimalColor(String animal) {
-		return colorMap.get(animal);
-	}
+    /**
+     * This function updates the map used by getAnimalCount() and countAnimals()
+     */
+    private void updateMap() {
+        for (String str : aniMap.keySet()) {
+            aniMap.put(str, 0);
+        }
+
+        for (Cell icell : map.values()) {
+            icell.countAnimals(aniMap);
+        }
+    }
+
+    /**
+     * Gives access to count of each Animal, mainly for LeaderBoard
+     *
+     * @return the map of how many of each type of Animal
+     */
+    public Map<String, Integer> getAnimalCount() {
+        return aniMap;
+    }
+
+    /**
+     * Returns the color associated with a given Animal.
+     *
+     * @param animal - the Animal to find the color of
+     * @return the Animal's color
+     */
+    public Color getAnimalColor(String animal) {
+        return colorMap.get(animal);
+    }
 
 }

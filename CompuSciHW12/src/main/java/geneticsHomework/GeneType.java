@@ -6,7 +6,13 @@ import java.util.List;
 public enum GeneType {
 
     MALE(true),
-    BROWN_COAT(false);
+    COLOR_RED(true),
+    COLOR_BLUE(true),
+    MASS_BREEDER(true),
+    SLOW_EATER(true),
+    EXTREME_STORAGE(true),
+    EXTRA_TASTY(true),
+    FAST_BREEDER(true);
 
     private boolean isDominant;
     private GeneType[] similarGenes;
@@ -44,5 +50,14 @@ public enum GeneType {
 
     public static List<GeneType> getSimilarGenesList(GeneType gt) {
         return gt.getSimilarGenesList();
+    }
+    
+    private void applySimilarGenes(GeneType... similarGenes){
+        this.similarGenes = similarGenes;
+    }
+    
+    public static void applySimilarGenes(){
+        COLOR_RED.applySimilarGenes(COLOR_BLUE);
+        COLOR_BLUE.applySimilarGenes(COLOR_RED);
     }
 }
